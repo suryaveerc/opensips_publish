@@ -503,6 +503,7 @@ int update_subscription(struct sip_msg *msg, subs_t *subs, int init_req) {
             LM_DBG("***************Publishing to queue: %s\n",jsonBuffer);
             publish_sub_queue(jsonBuffer);
             free(jsonBuffer);
+            jsonBuffer=NULL;
         }
         // First publish to queue to start NOTIFY process then insert/update cache.
         if (init_req == 0)
