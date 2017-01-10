@@ -505,7 +505,7 @@ int update_presentity(struct sip_msg *msg, presentity_t *presentity,
         LM_DBG("Inserting %d cols into table %s\n", n_query_cols, "Presentity");
 //insert into presentity (domain,username,event,etag,expires,sender,body,received_time )
 
-        jsonBuffer = (char *) pkg_malloc(JSON_BUF_LEN);
+        jsonBuffer = (char *) malloc(JSON_BUF_LEN);
         if(!jsonBuffer)
             LM_ERR("No more pkg memory\n");
         if (insertResource(query_cols, query_vals, n_query_cols, PRESENTITY,
@@ -741,7 +741,7 @@ int update_presentity(struct sip_msg *msg, presentity_t *presentity,
     LM_DBG("************************** D  O  N  E  ************************\n");
 
     if (jsonBuffer)
-        pkg_free(jsonBuffer);
+        free(jsonBuffer);
     if (notify_body.s)
         xmlFree(notify_body.s);
 

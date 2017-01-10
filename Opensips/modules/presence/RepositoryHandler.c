@@ -38,7 +38,7 @@ int updateResource(const db_key_t *_qk, const db_val_t *_qv, const db_key_t *_uk
             LM_ERR("Required parameters _rt not received.\n");
         return -1;
     }
-    char *jsonBuffer = (char *) pkg_malloc(JSON_BUF_LEN);
+    char *jsonBuffer =  malloc(JSON_BUF_LEN);
     if (jsonBuffer == NULL) {
         LM_ERR("No more pkg memory left");
         return -1;
@@ -48,7 +48,7 @@ int updateResource(const db_key_t *_qk, const db_val_t *_qv, const db_key_t *_uk
 
     if (!status) {
         LM_ERR("Unable to process the requested input");
-        pkg_free(jsonBuffer);
+        free(jsonBuffer);
         return -1;
     }
 
@@ -84,7 +84,7 @@ int updateResource(const db_key_t *_qk, const db_val_t *_qv, const db_key_t *_uk
          LM_DBG("PUT to %s failed. \n", url);*/
 
   //  pkg_free(url);
-    pkg_free(jsonBuffer);
+    free(jsonBuffer);
     //LM_DBG("Returning.");
     return ((status == 200 || status == 204) ? 1 : 0);
 }
@@ -107,7 +107,7 @@ insertResource(const db_key_t *_k, const db_val_t *_v, const int _n, const char 
 
     if (!status) {
         LM_ERR("Unable to process the requested input");
-        pkg_free(jsonBuffer);
+        free(jsonBuffer);
         return -1;
     }
 

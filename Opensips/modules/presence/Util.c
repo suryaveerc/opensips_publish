@@ -33,14 +33,14 @@ int parse_json_to_result(char *json, db_res_t** result) {
     {
     	return 0;
     }
-	*result = pkg_malloc(sizeof(db_res_t));
+	*result = malloc(sizeof(db_res_t));
 	if (!result) {
 		LM_ERR("No more memory to assign to result.");
 		return -1;
 	}
 
 	(*result)->n = recordCount;
-	(*result)->rows = pkg_malloc(sizeof(db_row_t) * recordCount);
+	(*result)->rows = malloc(sizeof(db_row_t) * recordCount);
 
 	if (!(*result)->rows) {
 		LM_ERR("No more memory to assign to (*result)->rows.");
@@ -54,7 +54,7 @@ int parse_json_to_result(char *json, db_res_t** result) {
 		j = 0;
 		record = cJSON_GetArrayItem(root, i);
 		(*result)->rows[i].n = colCount;
-		(*result)->rows[i].values = pkg_malloc(sizeof(db_val_t) * colCount);
+		(*result)->rows[i].values = malloc(sizeof(db_val_t) * colCount);
 		if (!(*result)->rows[i].values) {
 			LM_ERR("No more memory to assign to (*result)->rows[i].values .");
 			return -1;
@@ -118,7 +118,7 @@ int create_url(const db_key_t *_k, const db_val_t *_v, int _n, char *url, const 
 
         //LM_DBG("URL NOW: %s  \n", url);
 
-        char *urlJson = (char *) pkg_malloc(256);
+        char urlJson[256];// = (char *) pkg_malloc(256);
         if (urlJson == NULL) {
             LM_ERR("No more pkg memory left");
             return -1;
@@ -128,7 +128,7 @@ int create_url(const db_key_t *_k, const db_val_t *_v, int _n, char *url, const 
 
         if (!status) {
             LM_ERR("Unable create URL key-value json");
-            pkg_free(urlJson);
+            //pkg_free(urlJson);
             return -1;
         }
         //LM_DBG("urlJson: %s  \n", urlJson);
@@ -150,14 +150,14 @@ int create_url(const db_key_t *_k, const db_val_t *_v, int _n, char *url, const 
 
             if (!status) {
                 LM_ERR("Unable to create URL return keys JSON");
-                pkg_free(urlJson);
+               // pkg_free(urlJson);
                 return -1;
             }
             //   LM_DBG("urlJson: %s  \n", urlJson);
             temp = my_strcpy(temp, urlJson, 0, 0);
         }
         *(temp) = '\0'; // to remove the last &.
-        pkg_free(urlJson);
+       // pkg_free(urlJson);
     }
     //LM_DBG("\n\nGenerated URL: %s\n\n\n\n", url);
 
@@ -316,14 +316,14 @@ int free_result(db_res_t *_r)
                 _r->rows[i].values[j].val.str_val.s = NULL;
             }
         }
-        pkg_free(_r->rows[i].values);
+        free(_r->rows[i].values);
         _r->rows[i].values = NULL;
     }
     if (row_count) {
-        pkg_free(_r->rows);
+        free(_r->rows);
         _r->rows = NULL;
     }
-    pkg_free(_r);
+    free(_r);
     _r = NULL;
 //	LM_DBG("freeing result set a %p\n", _r);
     return 0;
