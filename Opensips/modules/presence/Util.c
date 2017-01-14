@@ -33,14 +33,14 @@ int parse_json_to_result(char *json, db_res_t** result) {
     {
     	return 0;
     }
-	*result = malloc(sizeof(db_res_t));
+	*result = calloc(1,sizeof(db_res_t));
 	if (!result) {
 		LM_ERR("No more memory to assign to result.");
 		return -1;
 	}
 
 	(*result)->n = recordCount;
-	(*result)->rows = malloc(sizeof(db_row_t) * recordCount);
+	(*result)->rows = calloc(recordCount,sizeof(db_row_t));
 
 	if (!(*result)->rows) {
 		LM_ERR("No more memory to assign to (*result)->rows.");
@@ -54,7 +54,7 @@ int parse_json_to_result(char *json, db_res_t** result) {
 		j = 0;
 		record = cJSON_GetArrayItem(root, i);
 		(*result)->rows[i].n = colCount;
-		(*result)->rows[i].values = malloc(sizeof(db_val_t) * colCount);
+		(*result)->rows[i].values = calloc(colCount,sizeof(db_val_t));
 		if (!(*result)->rows[i].values) {
 			LM_ERR("No more memory to assign to (*result)->rows[i].values .");
 			return -1;
@@ -75,12 +75,12 @@ int parse_json_to_result(char *json, db_res_t** result) {
 			//	LM_DBG("%s\n", str_val);
 				(*result)->rows[i].values[j].type = DB_STRING;
 				if (strcmp(str_val, "") == 0) {
-//					(*result)->rows[i].values[j].nul = 1;
+					(*result)->rows[i].values[j].nul = 1;
 //					(*result)->rows[i].values[j].free = 0;
 					(*result)->rows[i].values[j++].val.string_val = NULL;
 	//				LM_DBG("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n");
 				} else {
-//					(*result)->rows[i].values[j].nul = 0;
+					(*result)->rows[i].values[j].nul = 0;
 //					(*result)->rows[i].values[j].free = 1;
 					(*result)->rows[i].values[j++].val.string_val = strdup(
 							str_val);
