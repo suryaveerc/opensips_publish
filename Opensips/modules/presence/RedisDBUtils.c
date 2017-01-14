@@ -378,25 +378,25 @@ int checkPresentityInCache(char* pres_cache_key, char* pres_cache_value,
 			count = reply->elements;
 			if (count > 0) {
 
-				*listOfPublish = pkg_malloc(1 + count * sizeof(char*));
-				if (*listOfPublish == NULL) {
-					LM_ERR("NO more pkg memory left.\n");
-					return -1;
-				}
-			} else {
-			//	LM_DBG("Nothing found in cache.\n");
-				return 0;
-			}
-			//LM_DBG("In checkPresentityInCache 4\n");
-			for (i = 0; i < reply->elements; i++) {
+                *listOfPublish = malloc(1 + count * sizeof(char *));
+                if (*listOfPublish == NULL) {
+                    LM_ERR("NO more pkg memory left.\n");
+                    return -1;
+                }
+            }
+            else {
+                //	LM_DBG("Nothing found in cache.\n");
+                return 0;
+            }
+            //LM_DBG("In checkPresentityInCache 4\n");
+            for (i = 0; i < reply->elements; i++) {
 //				LM_DBG("Result: %s\n", reply->element[i]->str);
-				(*listOfPublish)[i] = pkg_malloc(
-						strlen(reply->element[i]->str) * sizeof(char) + 1);
-				if ((*listOfPublish)[i] == NULL) {
-					LM_ERR("NO more pkg memory left.\n");
-					return -1;
-				}
-				strcpy((*listOfPublish)[i], reply->element[i]->str);
+                (*listOfPublish)[i] = malloc(strlen(reply->element[i]->str) * sizeof(char) + 1);
+                if ((*listOfPublish)[i] == NULL) {
+                    LM_ERR("NO more pkg memory left.\n");
+                    return -1;
+                }
+                strcpy((*listOfPublish)[i], reply->element[i]->str);
 //				LM_DBG("listOfPublish: %s\n", (*listOfPublish)[i]);
 			}
 			(*listOfPublish)[i] = NULL;
@@ -514,105 +514,105 @@ int fetchPresentityFromCache(char* pres_cache_key, int *body_col,
 
 	for (i = 0; i < publish_count; i++) {
 //		LM_DBG("Searching: %s\n", listOfPublish[i]);
-		redisAppendCommand(redis_context, "HGETALL %s", listOfPublish[i]);
-		//LM_INFO("Redis set counter: %d", ++redisCounter);
-	}
-	*result = pkg_malloc(sizeof(db_res_t));
-	if (!result) {
-		LM_ERR("No more memory to assign to result.");
-		for (i = 0; i < sizeof(listOfPublish) / sizeof(listOfPublish[0]); i++)
-			free(listOfPublish[i]);
-		free(listOfPublish);
-		return -1;
-	}
-	(*result)->n = publish_count;
-	(*result)->rows = pkg_malloc(sizeof(db_row_t) * publish_count);
-	if (!(*result)->rows) {
-		LM_ERR("No more memory to assign to (*result)->rows.");
-		free_result(result);
-		for (i = 0; i < sizeof(listOfPublish) / sizeof(listOfPublish[0]); i++)
-			free(listOfPublish[i]);
-		free(listOfPublish);
-		return -1;
-	}
-	*etag_col = 0;
-	*expires_col = 1;
-	*body_col = 2;
-	*extra_hdrs_col = 3;
-	for (i = 0; i < publish_count; i++) {
-		redisGetReply(redis_context, &reply);
-		//LM_INFO("Redis unset counter: %d", --redisCounter);
-		if (reply->type == REDIS_REPLY_ERROR) {
-			LM_ERR("Error: %s\n", reply->str);
-			freeReplyObject(reply);
-			return -1;
-		} else {
-			char *temp = listOfPublish[i] + strlen(listOfPublish[i]);
-			while (*temp != ':') {
-				temp--;
-			}
-			temp++;
-			//LM_DBG("%s\n", temp); //fetched etag from the key.
-			(*result)->rows[i].n = 4; //actual returned will be 2 or 1 but this is done to match the expected result in the calling function. Work around!!
-			(*result)->rows[i].values = pkg_malloc(sizeof(db_val_t) * 4);
+        redisAppendCommand(redis_context, "HGETALL %s", listOfPublish[i]);
+        //LM_INFO("Redis set counter: %d", ++redisCounter);
+    }
+    *result = calloc(1,sizeof(db_res_t));
+
+    if (!result) {
+        LM_ERR("No more memory to assign to result.");
+        for (i = 0; i < sizeof(listOfPublish) / sizeof(listOfPublish[0]); i++)
+            free(listOfPublish[i]);
+        free(listOfPublish);
+        return -1;
+    }
+
+    (*result)->n = publish_count;
+    (*result)->rows = calloc(publish_count,sizeof(db_row_t));
+
+    if (!(*result)->rows) {
+        LM_ERR("No more memory to assign to (*result)->rows.");
+        free_result(result);
+        for (i = 0; i < sizeof(listOfPublish) / sizeof(listOfPublish[0]); i++)
+            free(listOfPublish[i]);
+        free(listOfPublish);
+        return -1;
+    }
+    *etag_col = 0;
+    *expires_col = 1;
+    *body_col = 2;
+    *extra_hdrs_col = 3;
+    for (i = 0; i < publish_count; i++) {
+        redisGetReply(redis_context, &reply);
+        //LM_INFO("Redis unset counter: %d", --redisCounter);
+        if (reply->type == REDIS_REPLY_ERROR) {
+            LM_ERR("Error: %s\n", reply->str);
+            freeReplyObject(reply);
+            return -1;
+        }
+        else {
+            char *temp = listOfPublish[i] + strlen(listOfPublish[i]);
+            while (*temp != ':') {
+                temp--;
+            }
+            temp++;
+            //LM_DBG("%s\n", temp); //fetched etag from the key.
+            (*result)->rows[i].n = 4; //actual returned will be 2 or 1 but this is done to match the expected result in the calling function. Work around!!
+            (*result)->rows[i].values = calloc(4,sizeof(db_val_t));
 
 			// 0- etag, 1-expires, 2-body, 3-extra_hdrs
 
-			int customindex = 0;
-			// assign etag
-			(*result)->rows[i].values[customindex].type = DB_STR;
-//			(*result)->rows[i].values[customindex].nul = 0;
-			(*result)->rows[i].values[customindex].val.str_val.s = strdup(temp);
-			customindex++;
-			// assign expires
-			(*result)->rows[i].values[customindex].type = DB_INT;
+            int customindex = 0;
+            // assign etag
+            (*result)->rows[i].values[customindex].type = DB_STR;
+			(*result)->rows[i].values[customindex].nul = 0;
+            (*result)->rows[i].values[customindex].val.str_val.s = strdup(temp);
+            customindex++;
+            // assign expires
+            (*result)->rows[i].values[customindex].type = DB_INT;
 //			(*result)->rows[i].values[customindex].nul = 1;
-			(*result)->rows[i].values[customindex].val.int_val = 0; //value currently not used.
-			//customindex++;
-			//LM_DBG("Key value pair count:%d\n", reply->elements / 2);
-			for (j = 1; j < reply->elements; j += 2) { // read only odd values. evens contains key names.
-				//LM_DBG("KEY returned [%d]:%s\n", j - 1,reply->element[j - 1]->str);
-				//LM_DBG("VALUE returned [%d]:%s\n", j, reply->element[j]->str);
+            (*result)->rows[i].values[customindex].val.int_val = 0; //value currently not used.
+            //customindex++;
+            //LM_DBG("Key value pair count:%d\n", reply->elements / 2);
+            for (j = 1; j < reply->elements; j += 2) { // read only odd values. evens contains key names.
+                LM_DBG("KEY returned [%d]:%s\n", j - 1,reply->element[j - 1]->str);
+                LM_DBG("VALUE returned [%d]:%s\n", j, reply->element[j]->str);
 
-				if (strcmp("body", reply->element[j - 1]->str) == 0) {
-					customindex = *body_col;
-				} else {
-					customindex = *extra_hdrs_col;
-				}
-				(*result)->rows[i].values[customindex].type = DB_STR;
-				if (reply->element[j]->str) {
-//					(*result)->rows[i].values[customindex].nul = 0;
-					(*result)->rows[i].values[customindex].val.string_val =
-							strdup(reply->element[j]->str);
-					//LM_DBG("!!! %d !!!!!!!!!!!!!!!!!!%s\n", customindex,	(*result)->rows[i].values[customindex].val.string_val);
-				} else {
-//					(*result)->rows[i].values[customindex].nul = 1;
-					(*result)->rows[i].values[customindex].val.string_val =
-							'\0';
-				}
-
-			}
-			freeReplyObject(reply);
-		}
-
-	}
-	/*LM_DBG("**********VERIFY RESULT*****************");
-	 LM_DBG("Count of ROWS:%d\n", (*result)->n);
-	 for (i = 0; i < (*result)->n; i++) {
-	 LM_DBG("Count of COLUMNS:%d\n", (*result)->rows[i].n);
-	 for (j = 0; j < (*result)->rows[i].n; j++) {
-	 if ((*result)->rows[i].values[j].type
-	 == DB_STR&& (*result)->rows[i].values[j].val.string_val !=NULL)
-	 LM_DBG("*****%s\n",
-	 (*result)->rows[i].values[j].val.string_val);
-	 else
-	 LM_DBG("*****%d\n", (*result)->rows[i].values[j].val.int_val);
-	 }
-	 }*/
-	for (i = 0; i < sizeof(listOfPublish) / sizeof(listOfPublish[0]); i++)
-		pkg_free(listOfPublish[i]);
-	pkg_free(listOfPublish);
-	return 1;
+                if (strcmp("body", reply->element[j - 1]->str) == 0) {
+                    customindex = *body_col;
+                }
+                else {
+                    customindex = *extra_hdrs_col;
+                }
+                (*result)->rows[i].values[customindex].type = DB_STR;
+                if (reply->element[j]->str && reply->element[j]->len != 0) {
+                    (*result)->rows[i].values[customindex].nul = 0;
+                    (*result)->rows[i].values[customindex].val.string_val = strdup(reply->element[j]->str);
+                    LM_DBG("!!! %d !!!!!!!!!!!!!!!!!!%s\n", customindex,	(*result)->rows[i].values[customindex].val.string_val);
+                }
+                else {
+                    (*result)->rows[i].values[customindex].nul = 1;
+                    (*result)->rows[i].values[customindex].val.string_val = NULL;
+                }
+            }
+            freeReplyObject(reply);
+        }
+    }
+/*    LM_DBG("**********VERIFY RESULT*****************");
+    LM_DBG("Count of ROWS:%d\n", (*result)->n);
+    for (i = 0; i < (*result)->n; i++) {
+        LM_DBG("Count of COLUMNS:%d\n", (*result)->rows[i].n);
+        for (j = 0; j < (*result)->rows[i].n; j++) {
+            if ((*result)->rows[i].values[j].type == DB_STR && (*result)->rows[i].values[j].val.string_val != NULL)
+                LM_DBG("*****%s\n", (*result)->rows[i].values[j].val.string_val);
+            else
+                LM_DBG("*****%d\n", (*result)->rows[i].values[j].val.int_val);
+        }
+    }*/
+    for (i = 0; i < sizeof(listOfPublish) / sizeof(listOfPublish[0]); i++)
+        free(listOfPublish[i]);
+    free(listOfPublish);
+    return 1;
 }
 int hasPublication(char **pres_cache_key) {
 	redisReply *reply;
